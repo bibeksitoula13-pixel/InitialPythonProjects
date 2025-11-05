@@ -1,7 +1,7 @@
 def Task():
     global Tasks
     Tasks = []
-    with open("/home/bibeksitoula/PycharmProjects/roadtomastery/to do list", "r") as To_do_file:
+    with open("/home/bibeksitoula/PycharmProjects/roadtomastery/InitialPythonProjects/to do list", "r") as To_do_file:
         for line in To_do_file:
             Tasks.append(line)
 def display():
@@ -15,7 +15,7 @@ def add():
     global Tasks
     while True:
         task = input("Enter a task: ")
-        with open("/home/bibeksitoula/PycharmProjects/roadtomastery/to do list","a") as To_do_file:
+        with open("/home/bibeksitoula/PycharmProjects/roadtomastery/InitialPythonProjects/to do list","a") as To_do_file:
             Tasks.append(task)
             To_do_file.write(task+"\n")
             usr_option = input("Would you like to add another task?[y/n]")
@@ -25,7 +25,7 @@ def add():
 def delete():
     global Tasks
     while True:
-        with open("/home/bibeksitoula/PycharmProjects/roadtomastery/to do list","w") as To_do_file:
+        with open("/home/bibeksitoula/PycharmProjects/roadtomastery/InitialPythonProjects/to do list","w") as To_do_file:
             num = 1
             for task in Tasks:
                 print(str(num) + ": " + task)
