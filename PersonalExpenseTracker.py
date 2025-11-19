@@ -1,6 +1,7 @@
 from datetime import datetime
 import csv
 from time import strptime
+import calendar
 
 TempDict = []
 def read():
@@ -21,7 +22,7 @@ def write():
     global TempDict
     try:
         with open("ExpenseTracker.csv","a") as exp_tra_file:
-            csv_writer = csv.DictWriter(exp_tra_file,fieldnames=["Expense","Date","Expenses","Category","Amount","Description"])
+            csv_writer = csv.DictWriter(exp_tra_file,fieldnames=["Expense","Date","Category","Amount","Description"])
             while True:
                 expense = input("Enter the expense: ")
                 date = input("Enter date of expense(yyyy-mm-dd): ")
@@ -81,21 +82,21 @@ def expense_by_category():
           f" clothes expesne is: {clothes_expense}, and it is {avg_cloths_expense}% of total\n Total"
           f" other expense is: {others_expense}, and it is {avg_others_expense}% of total.")
 
-def monthly_report():
+def monthly_report(income_month):
     global TempDict
     Current_Month = datetime.now().month
     total = 0
     totalpre = 0
     highest = 0
-    highestpre = 0
-    lowest = 0
-    lowestpre = 0
+    lowest = 1000000
+    transcations = 0
     amt_list = []
     list_month = []
     for items in TempDict:
         list_month.append(items["Date"])
         amt_list.append(int(items["Amount"]))
     for i in range(0,len(list_month)):
+        transcations += 1
         list_month[i] = datetime.strptime(list_month[i], "%Y-%m-%d")
         if list_month[i].month == Current_Month:
             total = total+amt_list[i]
@@ -106,20 +107,36 @@ def monthly_report():
 
         elif list_month[i].month== Current_Month-1:
             totalpre = totalpre+amt_list[i]
-            if amt_list[i] > highestpre:
-                highestpre = amt_list[i]
-            if amt_list[i]<lowestpre:
-                lowestpre = amt_list[i]
-    print(f"your total spending this months is {total}")
-    print(f"your total spending previous month was {totalpre}")
-    print(f"your total highest expense was on {highest}")
-    print(f"your total lowest expense was on {lowest}")
+    print(f"Monthly Summary ({calendar.month_name[Current_Month]})")
+    print(f"_"*50)
+    print(f"Total Income: {income_month}")
+    print(f"Total Expenses: {total}")
+    print(f"Net Salary: {income_month-total}\n")
+    print(f"Total Transcations: {transcations}")
+    print(f"Highest Expense: {highest}")
+    print(f"Lowest Expense: {lowest}")
+
+def main():
+    read()
+    while True:
+        usr_choice = input("Would you like to add another Expense[E]/view total expense[T]/view expense by category[C]/View Monthly summary[M]/Quit[Q]: ")
+        try:
+            if usr_choice.upper() == "E":
+                write()
+            elif usr_choice.upper() == "T":
+                print(total_expense())
+            elif usr_choice.upper() == "C":
+                expense_by_category()
+            elif usr_choice.upper() == "M":
+                income = int(input("Enter your income for this month: "))
+                monthly_report(income)
+            elif usr_choice.upper() == "Q":
+                break
+        except  ValueError:
+            print("Invalid input")
+main()
 
 
-read()
-print(total_expense())
-expense_by_category()
-monthly_report()
 
 
 
