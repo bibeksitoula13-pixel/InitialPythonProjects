@@ -1,11 +1,11 @@
 from datetime import datetime
 import csv
-from time import strptime
 import calendar
 
 TempDict = []
 def read():
     global TempDict
+    TempDict.clear()
     try:
         with open("ExpenseTracker.csv","r") as exp_tra_file:
             csv_reader = csv.DictReader(exp_tra_file)
@@ -13,7 +13,7 @@ def read():
                 TempDict.append(line)
                 print (line)
     except FileNotFoundError:
-        with open("ExpenseTracker.csv","a") as exp_tra_file:
+        with open("ExpenseTracker.csv","w") as exp_tra_file:
             fieldnames = ["Expense","Date","Category","Amount","Description"]
             csv_writer = csv.DictWriter(exp_tra_file, fieldnames=fieldnames)
             csv_writer.writeheader()
@@ -25,21 +25,38 @@ def write():
             csv_writer = csv.DictWriter(exp_tra_file,fieldnames=["Expense","Date","Category","Amount","Description"])
             while True:
                 expense = input("Enter the expense: ")
-                date = input("Enter date of expense(yyyy-mm-dd): ")
-                try:
-                    date_obj = datetime.strptime(date, "%Y-%m-%d")
-                except ValueError:
-                    print("Invalid date")
-                category = input("Enter category of expense: ")
-                amount = input("Enter amount of expense: ")
+                while True:
+                    date = input("Enter date of expense(yyyy-mm-dd): ")
+                    try:
+                        date_obj = datetime.strptime(date, "%Y-%m-%d")
+                        break
+                    except ValueError:
+                        print("Invalid date")
+                category = input(
+                    "Enter category of expense\n"
+                    "Food\n"
+                    "Clothes\n"
+                    "Rent\n"
+                    "Entertainment\n"
+                    "Other\n>"
+                ).lower()
+                while True:
+                    amount = input("Enter amount of expense: ")
+                    if amount.isdigit():
+                        amount = int(amount)
+                        break
+                    else:
+                        print("Amount must be a number")
                 description = input("Enter description of expense: ")
-                TempDict.append({"Expense":expense,"Date":date_obj.date(),"Category":category,"Amount":amount,"Description":description})
-                csv_writer.writerow(TempDict[len(TempDict)-1])
+
+                expense_entry = {"Expense":expense,"Date":date_obj.strftime("%Y-%m-%d"),"Category":category,"Amount":amount,"Description":description}
+                TempDict.append(expense_entry)
+                csv_writer.writerow(expense_entry)
                 usr_option = input("would you like to add more?[y/n]")
                 if usr_option == "n":
                     break
     except FileNotFoundError:
-        print("file not found")
+        print("File not found")
 
 def total_expense():
     global TempDict
@@ -74,65 +91,74 @@ def expense_by_category():
     avg_food_expense = (food_expense / total_expense()) *100
     avg_rent_expense = (rent_expense / total_expense()) *100
     avg_entertainment_expense = (entertainment_expense / total_expense()) *100
-    avg_cloths_expense = (clothes_expense / total_expense()) *100
+    avg_clothes_expense = (clothes_expense / total_expense()) *100
     avg_others_expense = (others_expense / total_expense()) *100
-    print(f"Total food expense is: {food_expense}, and it is {avg_food_expense}% of total\n Total "
-          f"rent expense is: {rent_expense}, and it is {avg_rent_expense}% of total\n Total "
-          f"entertainment expense is: {entertainment_expense}, and it is {avg_entertainment_expense}% of total\n Total"
-          f" clothes expesne is: {clothes_expense}, and it is {avg_cloths_expense}% of total\n Total"
-          f" other expense is: {others_expense}, and it is {avg_others_expense}% of total.")
+    print(f"Total food expense is: {food_expense}, and it is {round(avg_food_expense,2)}% of total\n Total "
+          f"rent expense is: {rent_expense}, and it is {round(avg_rent_expense,2)}% of total\n Total "
+          f"entertainment expense is: {entertainment_expense}, and it is {round(avg_entertainment_expense,2)}% of total\n Total"
+          f" clothes expense is: {clothes_expense}, and it is {round(avg_clothes_expense,2)}% of total\n Total"
+          f" other expense is: {others_expense}, and it is {round(avg_others_expense,2)}% of total.")
 
 def monthly_report(income_month):
     global TempDict
     Current_Month = datetime.now().month
+    Current_Year = datetime.now().year
     total = 0
     totalpre = 0
     highest = 0
-    lowest = 1000000
-    transcations = 0
-    amt_list = []
-    list_month = []
+    lowest = float("inf")
+    transactions = 0
     for items in TempDict:
-        list_month.append(items["Date"])
-        amt_list.append(int(items["Amount"]))
-    for i in range(0,len(list_month)):
-        transcations += 1
-        list_month[i] = datetime.strptime(list_month[i], "%Y-%m-%d")
-        if list_month[i].month == Current_Month:
-            total = total+amt_list[i]
-            if amt_list[i] > highest:
-                highest = amt_list[i]
-            if amt_list[i]<lowest:
-                lowest = amt_list[i]
+        amt = int(items["Amount"])
+        date_obj = datetime.strptime(items["Date"], "%Y-%m-%d")
 
-        elif list_month[i].month== Current_Month-1:
-            totalpre = totalpre+amt_list[i]
+        if date_obj.month == Current_Month and date_obj.year == Current_Year:
+            total += amt
+            transactions += 1
+            highest = max(highest, amt)
+            lowest = min(lowest, amt)
+
+        pre_month = Current_Month-1 if Current_Month > 1 else 12
+        if date_obj.month == pre_month:
+            totalpre += amt
+
+    if lowest == float("inf"):
+        lowest = 0
+
     print(f"Monthly Summary ({calendar.month_name[Current_Month]})")
     print(f"_"*50)
     print(f"Total Income: {income_month}")
     print(f"Total Expenses: {total}")
-    print(f"Net Salary: {income_month-total}\n")
-    print(f"Total Transcations: {transcations}")
+    print(f"Net Savings: {income_month-total}\n")
+    print(f"Total Transactions: {transactions}")
     print(f"Highest Expense: {highest}")
     print(f"Lowest Expense: {lowest}")
+    print(f"Previous Month Expenses: {totalpre}")
 
 def main():
     read()
     while True:
-        usr_choice = input("Would you like to add another Expense[E]/view total expense[T]/view expense by category[C]/View Monthly summary[M]/Quit[Q]: ")
+        usr_choice = input(
+            "\nChoose an option:\n"
+            "[A] Add Expense\n"
+            "[V] View Total Expense\n"
+            "[C] Expense by Category\n"
+            "[M] Monthly Report\n"
+            "[Q] quit\n> "
+        ).upper()
         try:
-            if usr_choice.upper() == "E":
+            if usr_choice == "A":
                 write()
-            elif usr_choice.upper() == "T":
-                print(total_expense())
-            elif usr_choice.upper() == "C":
+            elif usr_choice == "V":
+                print(f"Your total expense is: {total_expense()}")
+            elif usr_choice == "C":
                 expense_by_category()
-            elif usr_choice.upper() == "M":
+            elif usr_choice == "M":
                 income = int(input("Enter your income for this month: "))
                 monthly_report(income)
-            elif usr_choice.upper() == "Q":
+            elif usr_choice == "Q":
                 break
-        except  ValueError:
+        except ValueError:
             print("Invalid input")
 main()
 
